@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import AppSidebar from "../components/AppSidebar"
+import Navbar from "../components/Navbar"
+import { ThemeProvider } from "./libs/Theme-Provider";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -26,9 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)}>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
       <body suppressHydrationWarning>
-        {children}
+       <ThemeProvider
+         attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+       >
+       <AppSidebar/>
+       <main className="w-full">
+        <Navbar/>
+       <div className="px-4">{children}</div>
+       </main>
+</ThemeProvider>
       </body>
     </html>
   );
