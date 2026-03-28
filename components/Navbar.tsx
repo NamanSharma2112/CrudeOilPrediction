@@ -13,14 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ModeToggle } from './theme'
+import { SidebarTrigger } from './ui/sidebar'
 
 const Navbar = () => {
   return (
     <nav className='p-4 flex items-center justify-between'>
-      collapseButton
+      <SidebarTrigger/>
       <div className='flex items-center gap-4'>
       <Link href="/">Dashboard</Link>
-      <ModeToggle/>
+      <ModeToggle />
   
 <DropdownMenu>
   <DropdownMenuTrigger>
@@ -29,7 +30,7 @@ const Navbar = () => {
   <AvatarFallback>CN</AvatarFallback>
 </Avatar>
   </DropdownMenuTrigger>
-  <DropdownMenuContent sideOffset={10} className='mr-4'>
+  <DropdownMenuContent sideOffset={10} className='mr-4 transition-all duration-350 ease-in-out'>
     <DropdownMenuGroup>
       <DropdownMenuLabel>My Account</DropdownMenuLabel>
       <DropdownMenuItem><User className='h-[1.2rem] w-[1.2rem] mr-2'/>Profile</DropdownMenuItem>
