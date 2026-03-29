@@ -70,7 +70,7 @@ const AppSidebar = () => {
                     height={30}
                     className="rounded-full object-cover"
                   />
-                  <span>Legion Dev</span>
+                  <span className="truncate">Legion Dev</span>
                 </Link>
                 
               </SidebarMenuButton>
@@ -98,7 +98,7 @@ const AppSidebar = () => {
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>
                       <item.icon />
-                      <span>{item.title}</span>
+                      <span className="truncate">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </motion.li>
@@ -123,14 +123,14 @@ const AppSidebar = () => {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/">
-                  <Projector/><span> See all projects </span>
+                  <Projector/><span className="truncate"> See all projects </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
                 <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/">
-                  <Projector/> <span> See all projects </span>
+                  <Projector/> <span className="whitespace-nowrap"> See all projects </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -146,20 +146,20 @@ const AppSidebar = () => {
             <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180"/>
             </CollapsibleTrigger>
           </SidebarGroupLabel>
-     <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+     <CollapsibleContent className="overflow-hidden will-change-[height] data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/">
-                  <Projector/><span> See all projects </span>
+                  <Projector/><span className="truncate"> See all projects </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
                 <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/">
-                  <Projector/> <span> See all projects </span>
+                  <Projector/> <span className="truncate"> See all projects </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -184,7 +184,7 @@ const AppSidebar = () => {
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton>
                     <User2 />
-                    <span>John Doe</span>
+                    <span className="truncate">John Doe</span>
                     <ChevronUp className="ml-auto" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
