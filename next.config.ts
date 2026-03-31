@@ -8,6 +8,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'github.com',
         pathname: '/**',
+      },   {
+        protocol: 'https',
+        hostname: 'loremflickr.com',
+        pathname: '/**',
       },
     ],
   },

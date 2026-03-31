@@ -2,6 +2,7 @@
 import AppBarChart from "@/components/AppBarChart";
 import { CardImage } from "@/components/AppCard";
 import { ChartPieDonutText } from "@/components/AppPieChart";
+import CardList from "@/components/CardList";
 import { motion } from "motion/react";
 
 const containerVariants = {
@@ -37,11 +38,11 @@ export default function Home() {
 
       {/* Test Items */}
       <motion.div variants={itemVariants} className="rounded-lg bg-primary-foreground p-4">
-        <ChartPieDonutText />
+      <CardList title="Top Gainers"/>
       </motion.div>
       
       <motion.div variants={itemVariants} className="rounded-lg bg-primary-foreground p-4">
-        <CardImage />
+        <ChartPieDonutText />
       </motion.div>
       
       {/* Shortened for brevity, but apply motion.div + variants to all 3 below */}
