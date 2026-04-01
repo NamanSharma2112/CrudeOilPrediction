@@ -40,13 +40,7 @@ const populateData = () => [
         image: 'https://loremflickr.com/800/600/fire,heating', 
         count: 34 
     },
-    { 
-        id: 6, 
-        title: 'Gasoline', 
-        badge: 'Fuel', 
-        image: 'https://loremflickr.com/800/600/gas,station', 
-        count: 41 
-    },
+ 
 ]
 
 const CardList = ({title}:{title:string}) => {

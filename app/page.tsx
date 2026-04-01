@@ -1,23 +1,28 @@
 "use client"
+import { ChartAreaInteractive } from "@/components/AppAreaChart";
 import AppBarChart from "@/components/AppBarChart";
-import { CardImage } from "@/components/AppCard";
 import { ChartPieDonutText } from "@/components/AppPieChart";
 import CardList from "@/components/CardList";
-import { motion } from "motion/react";
+import TodoList from "@/components/TodoList";
+import { motion, easeInOut } from "framer-motion"; // or "motion/react"
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1, // Delay between each child animation
+      staggerChildren: 0.1,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 }, // Slide up slightly
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  hidden: { opacity: 0, y: -20 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { duration: 0.5, ease: easeInOut } 
+  },
 };
 
 export default function Home() {
@@ -26,35 +31,60 @@ export default function Home() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-4"
+      // Ensure items-stretch is here so cards have equal height
+      className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-4 items-stretch"
     >
       {/* Chart Item */}
       <motion.div 
         variants={itemVariants} 
-        className="rounded-lg bg-primary-foreground p-4 lg:col-span-2 xl:col-span-1 2xl:col-span-2"
+        className="flex flex-col rounded-lg bg-primary-foreground p-4 lg:col-span-2 xl:col-span-1 2xl:col-span-2"
       >
-        <AppBarChart />
+        <div className="flex-1 h-full"> 
+          <AppBarChart />
+        </div>
       </motion.div>
 
-      {/* Test Items */}
-      <motion.div variants={itemVariants} className="rounded-lg bg-primary-foreground p-4">
-      <CardList title="Top Gainers"/>
+      {/* List Item */}
+      <motion.div 
+        variants={itemVariants} 
+        className="rounded-lg bg-primary-foreground p-4 overflow-hidden"
+      >
+        <CardList title="Top Gainers"/>
       </motion.div>
       
-      <motion.div variants={itemVariants} className="rounded-lg bg-primary-foreground p-4">
-        <ChartPieDonutText />
+      {/* Pie Chart Item */}
+      <motion.div 
+        variants={itemVariants} 
+        className="flex flex-col rounded-lg bg-primary-foreground p-4"
+      >
+        <div className="flex-1 flex items-center justify-center h-full">
+          <ChartPieDonutText />
+        </div>
+      </motion.div>
+          <motion.div 
+        variants={itemVariants} 
+        className="flex flex-col rounded-lg bg-primary-foreground p-4"
+      >
+      
+          <TodoList />
+        
       </motion.div>
       
-      {/* Shortened for brevity, but apply motion.div + variants to all 3 below */}
-      {[1, 2, 3].map((_, index) => (
+      {/* Area Chart Item */}
+      <motion.div 
+        variants={itemVariants} 
+        className="flex flex-col rounded-lg bg-primary-foreground p-4 lg:col-span-2 xl:col-span-1 2xl:col-span-2"
+      >
+        <ChartAreaInteractive />
+      </motion.div>
         <motion.div 
-          key={index} 
-          variants={itemVariants} 
-          className="rounded-lg bg-primary-foreground p-4"
-        >
-          Test
-        </motion.div>
-      ))}
+        variants={itemVariants} 
+        className="flex flex-col rounded-lg bg-primary-foreground p-4"
+      >
+        <div className="flex-1 flex items-center justify-center h-full">
+          <ChartPieDonutText />
+        </div>
+      </motion.div>
     </motion.main>
   );
 }
