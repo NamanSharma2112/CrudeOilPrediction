@@ -27,6 +27,7 @@ import {
 import { Variants } from "motion/react";
 
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "./ui/collapsible"
+import {  CommandManyItems } from "./ui/Cmd"
 const items = [
   { title: "Home",     url: "/",  icon: Home },
   { title: "Inbox",    url: "#",  icon: Inbox },
@@ -82,8 +83,9 @@ const AppSidebar = () => {
       <SidebarSeparator />
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+        <SidebarGroup >
+              <CommandManyItems  />
+          <SidebarGroupLabel className="mt-2">Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item, i) => (

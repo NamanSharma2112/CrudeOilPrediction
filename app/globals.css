@@ -127,3 +127,48 @@
     @apply font-sans;
     }
 }
+@keyframes slideDownFade {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRightFade {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes simpleFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-down-fade {
+  opacity: 0;
+  animation: slideDownFade 0.4s ease-out forwards;
+}
+
+.animate-slide-right-fade {
+  opacity: 0;
+  animation: slideRightFade 0.35s ease-out forwards;
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: simpleFadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  opacity: 0; /* Keeps it hidden before the animation starts */
+  animation: fadeInDown 0.5s ease-in-out forwards;
+}
