@@ -23,7 +23,7 @@ export default function Home() {
       {/* List Item */}
       <div 
         className="animate-fade-in-down rounded-lg bg-primary-foreground p-4 overflow-hidden"
-        style={{ animationDelay: "100ms" }}
+        style={{ animationDelay: "300ms" }}
       >
         <CardList title="Top Gainers"/>
       </div>
@@ -31,7 +31,7 @@ export default function Home() {
       {/* Pie Chart Item */}
       <div 
         className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4"
-        style={{ animationDelay: "200ms" }}
+        style={{ animationDelay: "300ms" }}
       >
         <div className="flex-1 flex items-center justify-center h-full">
           <ChartPieDonutText />
@@ -49,7 +49,7 @@ export default function Home() {
       {/* Area Chart Item */}
       <div 
         className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4 lg:col-span-2 xl:col-span-1 2xl:col-span-2"
-        style={{ animationDelay: "400ms" }}
+        style={{ animationDelay: "300ms" }}
       >
         <ChartAreaInteractive />
       </div>
@@ -57,7 +57,7 @@ export default function Home() {
       {/* Second Pie Chart Item */}
       <div 
         className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4"
-        style={{ animationDelay: "500ms" }}
+        style={{ animationDelay: "300ms" }}
       >
         <div className="flex-1 flex items-center justify-center h-full">
           <ChartPieDonutText />
