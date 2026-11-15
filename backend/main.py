@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from config import MODEL_DIR, EXPERIMENTS
 from data_ingestion import fetch_all_data
 from model import forecast_latest, check_models_exist
+from market import router as market_router
 
 
 # ======================================================================
@@ -135,6 +136,8 @@ app = FastAPI(
     description="Stacked ensemble (LSTM + XGBoost + LightGBM + Ridge) for WTI & Brent price forecasting.",
     lifespan=lifespan,
 )
+
+app.include_router(market_router)
 
 app.add_middleware(
     CORSMiddleware,

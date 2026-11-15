@@ -22,13 +22,13 @@ CrudeIQ is a production-grade oil market intelligence web application targeting 
 
 ## Screenshots
 
-| Overview | Price Forecasting | Production & Reserves |
-|---|---|---|
-| ![Overview page](./docs/screenshots/overview.png) | ![Forecasting page](./docs/screenshots/forecasting.png) | ![Production page](./docs/screenshots/production.png) |
-
-| Supply Chain | Market Intelligence |
+| Dashboard (dark) | Dashboard (light) |
 |---|---|
-| ![Supply chain page](./docs/screenshots/supply-chain.png) | ![Market page](./docs/screenshots/market.png) |
+| ![Dashboard, dark theme](./docs/screenshots/dashboard-dark.png) | ![Dashboard, light theme](./docs/screenshots/dashboard-light.png) |
+
+| Trade flows map | Chokepoints map | Mobile |
+|---|---|---|
+| ![Trade flows](./docs/screenshots/map-trade-flows.png) | ![Chokepoints](./docs/screenshots/map-chokepoints.png) | ![Mobile](./docs/screenshots/dashboard-mobile.png) |
 
 ---
 
@@ -199,90 +199,64 @@ crudeiq/
 
 ## Getting started
 
+The app has two parts: the Next.js dashboard (repo root) and a FastAPI service in `backend/` that serves live market data and the ML forecasts. The dashboard proxies to it through `/api/forecast` and `/api/market/*`.
+
 ### Prerequisites
 
 - Node.js 20+
-- Python 3.11+
-- PostgreSQL 16
-- Redis 7
-- Docker (optional, for local DB)
+- Python 3.11+ (tested with 3.13)
 
-### 1. Clone and install
+### 1. Install
 
 ```bash
 git clone https://github.com/NamanSharma2112/CrudeOilPrediction.git
 cd CrudeOilPrediction
-
-# Frontend dependencies
 npm install
 
-# ML API dependencies
-cd ml
-pip install -r requirements.txt
-cd ..
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r backend/requirements.txt
 ```
 
-### 2. Environment variables
+### 2. API keys (optional)
 
-Copy the example env file and fill in your API keys:
-
-```bash
-cp .env.example .env.local
-```
+Live prices come from Yahoo Finance and need no key. EIA, FRED and NewsAPI add extra model features; without keys those sources are skipped and the model trains on Yahoo data only. To use them, create `backend/.env`:
 
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/crudeiq"
-REDIS_URL="redis://localhost:6379"
-
-# EIA Open Data API — https://www.eia.gov/opendata/register.php
 EIA_API_KEY=""
-
-# Yahoo Finance (no key needed for basic use)
-YAHOO_FINANCE_BASE_URL="https://query1.finance.yahoo.com/v8/finance"
-
-# NewsAPI — https://newsapi.org/register
+FRED_API_KEY=""
 NEWS_API_KEY=""
-
-# FastAPI ML service
-ML_API_URL="http://localhost:8000"
-ML_API_SECRET=""
-
-# NextAuth (optional — for alert config / watchlist)
-NEXTAUTH_SECRET=""
-NEXTAUTH_URL="http://localhost:3000"
 ```
 
-### 3. Start local services
+### 3. Train the models (first run, ~5 min on CPU)
 
 ```bash
-# Spin up Postgres + Redis with Docker
-docker-compose up -d
-
-# Run Prisma migrations
-npx prisma migrate dev
+cd backend
+python retrain.py                  # WTI/Brent x 1-day/7-day; artifacts go to backend/models/
 ```
 
-### 4. Train the ML model (first run)
+### 4. Start both servers
 
 ```bash
-cd ml
-python data/fetch_eia.py          # Downloads historical EIA price data
-python model/train.py             # Trains LSTM + Prophet models (~5 min on CPU)
-```
+# Terminal 1 — FastAPI (port 8000), docs at http://localhost:8000/docs
+cd backend
+uvicorn main:app --port 8000
 
-### 5. Start the development servers
-
-```bash
-# Terminal 1 — Next.js frontend (port 3000)
+# Terminal 2 — Next.js (port 3000)
 npm run dev
-
-# Terminal 2 — FastAPI ML service (port 8000)
-cd ml
-uvicorn main:app --reload --port 8000
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). Set `FASTAPI_URL` if the backend runs somewhere other than `http://localhost:8000`.
+
+### Backend endpoints
+
+| Method | Path | What it returns |
+|---|---|---|
+| GET | `/market/quotes` | Latest price, day change and 30-day sparkline for WTI, Brent, natural gas, gasoline, heating oil, DXY, gold, S&P 500 (cached 60 s) |
+| GET | `/market/history?range=1M\|3M\|6M\|1Y\|5Y` | Daily closes for the same instruments plus the Brent–WTI spread (cached 5 min) |
+| POST | `/forecast` | Stacked-ensemble forecast (see API below) |
+| POST | `/retrain` · GET `/retrain/status` | Trigger / check retraining (also runs weekly, Sunday 02:00 UTC) |
+| GET | `/health` | Service and model status |
 
 ---
 
