@@ -1,68 +1,41 @@
 "use client"
-import { ChartAreaInteractive } from "@/components/AppAreaChart";
-import AppBarChart from "@/components/AppBarChart";
-import { ChartPieDonutText } from "@/components/AppPieChart";
-import CardList from "@/components/CardList";
-import TodoList from "@/components/TodoList";
+
+import dynamic from "next/dynamic"
+import QuoteCards from "@/components/dashboard/QuoteCards"
+import { PerformanceChart, PriceHistoryChart, SpreadChart } from "@/components/dashboard/MarketCharts"
+import ForecastCard from "@/components/ForecastCard"
+import { MapSkeleton } from "meridian-ui"
+
+// The maps draw with canvas/SVG measured in the browser, so skip SSR for them.
+const ProductionMap = dynamic(() => import("@/components/dashboard/OilMaps").then((m) => m.ProductionMap), {
+  ssr: false,
+  loading: () => <MapSkeleton className="lg:col-span-2 2xl:col-span-3" />,
+})
+const ChokepointGlobe = dynamic(() => import("@/components/dashboard/OilMaps").then((m) => m.ChokepointGlobe), {
+  ssr: false,
+  loading: () => <MapSkeleton />,
+})
 
 export default function Home() {
   return (
-    <main
-      className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-4 items-stretch"
-    >
-      {/* Chart Item */}
-      <div 
-        className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4 lg:col-span-2 xl:col-span-1 2xl:col-span-2"
-        style={{ animationDelay: "0ms" }}
-      >
-        <div className="flex-1 h-full"> 
-          <AppBarChart />
-        </div>
+    <main className="flex flex-col gap-4 pb-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Crude oil market overview</h1>
+        <p className="text-sm text-muted-foreground">
+          Live benchmark prices, ML forecasts, global production and the routes oil travels.
+        </p>
       </div>
 
-      {/* List Item */}
-      <div 
-        className="animate-fade-in-down rounded-lg bg-primary-foreground p-4 overflow-hidden"
-        style={{ animationDelay: "300ms" }}
-      >
-        <CardList title="Top Gainers"/>
-      </div>
-      
-      {/* Pie Chart Item */}
-      <div 
-        className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4"
-        style={{ animationDelay: "300ms" }}
-      >
-        <div className="flex-1 flex items-center justify-center h-full">
-          <ChartPieDonutText />
-        </div>
-      </div>
-      
-      {/* Todo List Item */}
-      <div 
-        className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4"
-        style={{ animationDelay: "300ms" }}
-      >
-        <TodoList />
-      </div>
-      
-      {/* Area Chart Item */}
-      <div 
-        className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4 lg:col-span-2 xl:col-span-1 2xl:col-span-2"
-        style={{ animationDelay: "300ms" }}
-      >
-        <ChartAreaInteractive />
-      </div>
-      
-      {/* Second Pie Chart Item */}
-      <div 
-        className="animate-fade-in-down flex flex-col rounded-lg bg-primary-foreground p-4"
-        style={{ animationDelay: "300ms" }}
-      >
-        <div className="flex-1 flex items-center justify-center h-full">
-          <ChartPieDonutText />
-        </div>
+      <QuoteCards />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+        <PriceHistoryChart delay={0} />
+        <ForecastCard delay={80} />
+        <ProductionMap delay={120} />
+        <ChokepointGlobe delay={160} />
+        <SpreadChart delay={200} />
+        <PerformanceChart delay={240} />
       </div>
     </main>
-  );
+  )
 }

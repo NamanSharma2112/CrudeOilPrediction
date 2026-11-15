@@ -172,3 +172,13 @@
   opacity: 0; /* Keeps it hidden before the animation starts */
   animation: fadeInDown 0.5s ease-in-out forwards;
 }
+
+/* meridian-ui map theme: oil-amber accent (higher specificity than the library's tokens) */
+html:root {
+  --mr-accent: oklch(0.769 0.188 70.08);
+  --mr-atmosphere: oklch(0.769 0.188 70.08 / 0.18);
+}
+html.dark {
+  --mr-accent: oklch(0.769 0.188 70.08);
+  --mr-atmosphere: oklch(0.769 0.188 70.08 / 0.22);
+}

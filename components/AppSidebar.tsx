@@ -71,7 +71,7 @@ const AppSidebar = () => {
                     height={30}
                     className="rounded-full object-cover"
                   />
-                  <span className="truncate">Legion Dev</span>
+                  <span className="truncate font-semibold">CrudeIQ</span>
                 </Link>
                 
               </SidebarMenuButton>

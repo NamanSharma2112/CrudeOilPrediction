@@ -104,6 +104,12 @@ def build_modeling_frame(
 ) -> pd.DataFrame:
     df = base_df.copy()
 
+    # Sources without an API key (EIA / FRED / NewsAPI) come back as all-NaN
+    # object columns. Coerce everything to numeric and drop fully-empty
+    # columns so the final dropna() doesn't wipe out every row.
+    df = df.apply(pd.to_numeric, errors="coerce")
+    df = df.dropna(axis=1, how="all")
+
     # LSTM lag/rolling features
     df["price_lag_1"] = df[target_col].shift(1)
     df["price_lag_3"] = df[target_col].shift(3)
