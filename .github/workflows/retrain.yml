@@ -1,0 +1,57 @@
+name: retrain
+
+# Weekly full retrain: fetch 5 years of data, train LSTM + XGBoost + LightGBM
+# + Ridge stack for WTI/Brent x 1/7-day horizons, then publish the artifacts
+# and a fresh forecasts.json.
+on:
+  schedule:
+    - cron: "40 2 * * 0" # Sunday 02:40 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: retrain
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      MODEL_DIR: ${{ github.workspace }}/data-out/models
+      TF_CPP_MIN_LOG_LEVEL: "2"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - run: pip install -r backend/requirements.txt
+
+      - name: Train models
+        run: python backend/retrain.py
+
+      - name: Check every experiment trained
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          log = json.load(open(os.path.join(os.environ["MODEL_DIR"], "retrain_log.json")))
+          failed = {k: v["error"] for k, v in log["experiments"].items() if "error" in v}
+          print(json.dumps(log["experiments"], indent=2))
+          if failed:
+              sys.exit(f"Failed experiments, not publishing: {failed}")
+          PY
+
+      - name: Forecast with the new models
+        run: python backend/predict_batch.py --out data-out
+
+      - name: Publish to data branch
+        run: .github/scripts/data-branch.sh push data-out "Retrain $(date -u +%FT%TZ)" models forecasts.json

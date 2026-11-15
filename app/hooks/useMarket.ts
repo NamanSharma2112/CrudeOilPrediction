@@ -38,7 +38,8 @@ async function getJson<T>(url: string): Promise<T> {
 export function useQuotes() {
   return useQuery({
     queryKey: ['market', 'quotes'],
-    queryFn: () => getJson<{ quotes: Quote[]; fetched_at: string }>('/api/market/quotes'),
+    queryFn: () =>
+      getJson<{ quotes: Quote[]; fetched_at: string; source?: 'snapshot' }>('/api/market/quotes'),
     refetchInterval: 60_000,
     staleTime: 30_000,
   });

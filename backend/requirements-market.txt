@@ -1,0 +1,6 @@
+# Minimal dependencies for snapshot_market.py (hourly GitHub Actions job).
+# No TensorFlow, so the install takes seconds instead of minutes.
+fastapi==0.115.0
+pandas==3.1.1
+numpy==2.5.4
+yfinance==1.8.0
