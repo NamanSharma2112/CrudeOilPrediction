@@ -58,3 +58,43 @@ export function useHistory(range: HistoryRange) {
     placeholderData: keepPreviousData,
   });
 }
+
+export type ModelMetrics = Record<string, { MAE: number; RMSE: number; MAPE: number; R2: number; 'Dir Accuracy': number }>;
+
+export interface RetrainLog {
+  last_retrained_at: string;
+  experiments: Record<string, ModelMetrics | { error: string }>;
+  data_shape: [number, number];
+}
+
+/** Test-set metrics from the latest training run. */
+export function useModelLog() {
+  return useQuery({
+    queryKey: ['model', 'log'],
+    queryFn: () => getJson<RetrainLog>('/api/model'),
+    staleTime: 60 * 60_000,
+  });
+}
+
+export interface Tanker {
+  mmsi: number;
+  name: string;
+  lat: number;
+  lng: number;
+  sog: number | null; // speed over ground, knots
+  cog: number | null; // course over ground, degrees
+  destination: string;
+  ship_type: number;
+  time: string;
+}
+
+/** Latest AIS snapshot of tankers near the main oil chokepoints (hourly). */
+export function useTankers() {
+  return useQuery({
+    queryKey: ['market', 'tankers'],
+    queryFn: () => getJson<{ fetched_at: string; vessels: Tanker[] }>('/api/market/tankers'),
+    refetchInterval: 10 * 60_000,
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+}

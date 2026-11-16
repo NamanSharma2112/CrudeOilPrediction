@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar"
 import { ThemeProvider } from "./libs/Theme-Provider";
 import { QueryProvider } from "./libs/Query-Provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cookies } from "next/headers";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -43,6 +44,7 @@ export default async function RootLayout({
             disableTransitionOnChange
        >
        <QueryProvider>
+       <TooltipProvider delayDuration={0}>
        <SidebarProvider defaultOpen={defaultOpen}>
        <AppSidebar/>
        <main className="w-full">
@@ -50,6 +52,7 @@ export default async function RootLayout({
        <div className="px-4">{children}</div>
        </main>
        </SidebarProvider>
+       </TooltipProvider>
        </QueryProvider>
 </ThemeProvider>
       </body>

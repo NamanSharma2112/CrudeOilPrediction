@@ -42,38 +42,3 @@ export const PRODUCTION_SHORT_NAMES: Record<string, string> = {
   'United States of America': 'United States',
   'United Arab Emirates': 'UAE',
 };
-
-type Pt = { lat: number; lng: number };
-const P = {
-  rasTanura: { lat: 26.64, lng: 50.16 },
-  basra: { lat: 30.5, lng: 47.8 },
-  fujairah: { lat: 25.12, lng: 56.33 },
-  primorsk: { lat: 60.35, lng: 28.62 },
-  kozmino: { lat: 42.73, lng: 133.0 },
-  hardisty: { lat: 52.67, lng: -111.3 },
-  cushing: { lat: 35.98, lng: -96.77 },
-  corpusChristi: { lat: 27.8, lng: -97.4 },
-  santos: { lat: -23.96, lng: -46.33 },
-  bonny: { lat: 4.43, lng: 7.15 },
-  ningbo: { lat: 29.87, lng: 121.55 },
-  qingdao: { lat: 36.07, lng: 120.38 },
-  jamnagar: { lat: 22.47, lng: 70.06 },
-  chiba: { lat: 35.6, lng: 140.1 },
-  rotterdam: { lat: 51.95, lng: 4.14 },
-  ulsan: { lat: 35.5, lng: 129.38 },
-} satisfies Record<string, Pt>;
-
-/** Major seaborne / pipeline crude routes (illustrative). */
-export const TRADE_ROUTES: { from: Pt; to: Pt; label: string }[] = [
-  { from: P.rasTanura, to: P.ningbo, label: 'Saudi Arabia → China' },
-  { from: P.rasTanura, to: P.jamnagar, label: 'Saudi Arabia → India' },
-  { from: P.basra, to: P.jamnagar, label: 'Iraq → India' },
-  { from: P.fujairah, to: P.chiba, label: 'UAE → Japan' },
-  { from: P.rasTanura, to: P.ulsan, label: 'Saudi Arabia → South Korea' },
-  { from: P.kozmino, to: P.qingdao, label: 'Russia → China' },
-  { from: P.primorsk, to: P.jamnagar, label: 'Russia → India' },
-  { from: P.hardisty, to: P.cushing, label: 'Canada → United States' },
-  { from: P.corpusChristi, to: P.rotterdam, label: 'United States → Europe' },
-  { from: P.santos, to: P.qingdao, label: 'Brazil → China' },
-  { from: P.bonny, to: P.rotterdam, label: 'Nigeria → Europe' },
-];

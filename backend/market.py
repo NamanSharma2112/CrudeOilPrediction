@@ -3,6 +3,7 @@ Live market data endpoints (Yahoo Finance via yfinance).
 
   GET /market/quotes          — latest price, day change and a 30-day sparkline
                                 for crude benchmarks and related markets
+  GET /market/tankers         — latest AIS tanker snapshot (snapshot_ais.py)
   GET /market/history?range=  — daily closes for WTI, Brent, DXY, gold, S&P 500,
                                 natural gas (1M | 3M | 6M | 1Y | 5Y)
 
@@ -10,7 +11,9 @@ Responses are cached in memory for a short time so the dashboard can poll
 every 60 s without hammering Yahoo.
 """
 
+import json
 import math
+import os
 import threading
 import time
 from datetime import datetime, timezone
@@ -164,3 +167,18 @@ def market_history(range: str = Query("1Y", pattern="^(1M|3M|6M|1Y|5Y)$")):
         raise
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Market data error: {exc}")
+
+
+@router.get("/tankers")
+def market_tankers():
+    """Serve the last AIS snapshot written by snapshot_ais.py, if there is one."""
+    from config import CACHE_DIR
+
+    path = os.path.join(CACHE_DIR, "tankers.json")
+    if not os.path.exists(path):
+        raise HTTPException(
+            status_code=404,
+            detail="No AIS snapshot yet. Set AISSTREAM_API_KEY and run snapshot_ais.py.",
+        )
+    with open(path) as f:
+        return json.load(f)
