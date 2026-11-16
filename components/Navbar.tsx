@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { ModeToggle } from "./theme"
 import { SidebarTrigger } from "./ui/sidebar"
 import { navItemFor, REPO_URL } from "@/app/libs/nav"
+import { UserMenu, type SessionUser } from "./UserMenu"
 
-const Navbar = () => {
+const Navbar = ({ user }: { user: SessionUser | null }) => {
   const page = navItemFor(usePathname())
 
   return (
@@ -28,6 +29,7 @@ const Navbar = () => {
             <Github className="size-[1.2rem]" />
           </a>
         </Button>
+        <UserMenu user={user} />
       </div>
     </nav>
   )

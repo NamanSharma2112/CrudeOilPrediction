@@ -9,6 +9,7 @@ import { QueryProvider } from "./libs/Query-Provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cookies } from "next/headers";
+import { currentUser } from "@/auth";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -34,6 +35,7 @@ export default async function RootLayout({
 }) {
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"
+  const user = await currentUser()
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
       <body suppressHydrationWarning>
@@ -48,7 +50,7 @@ export default async function RootLayout({
        <SidebarProvider defaultOpen={defaultOpen}>
        <AppSidebar/>
        <main className="w-full">
-        <Navbar/>
+        <Navbar user={user ? { name: user.name, email: user.email, image: user.image } : null} />
        <div className="px-4">{children}</div>
        </main>
        </SidebarProvider>
