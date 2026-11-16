@@ -378,6 +378,22 @@ Production runs on two free services and no always-on Python server:
 
 5. Deploy, then check `https://<your-app>.vercel.app/api/market/quotes`.
 
+### Optional: live tanker positions (AIS)
+
+The Supply chain map animates tankers along the main sea lanes on its own. To also plot real tankers near the chokepoints, get a free key at [aisstream.io](https://aisstream.io) (sign in with GitHub) and add it as the GitHub Actions secret `AISSTREAM_API_KEY`. The hourly `market` job then writes `tankers.json` to the `data` branch.
+
+### Optional: sign-in
+
+Sign-in uses [Auth.js](https://authjs.dev) with GitHub and/or Google, keeps sessions in signed cookies (no database), and is never required to use the app. To turn it on, add these to Vercel's environment variables and redeploy:
+
+| Variable | Where to get it |
+|---|---|
+| `AUTH_SECRET` | Run `npx auth secret`, or any random 32+ character string |
+| `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET` | [GitHub → Settings → Developer settings → OAuth Apps → New OAuth App](https://github.com/settings/developers). Callback URL: `https://<your-domain>/api/auth/callback/github` |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Optional. Google Cloud console → APIs & Services → Credentials → OAuth client ID (web). Redirect URI: `https://<your-domain>/api/auth/callback/google` |
+
+All variables are listed in [`.env.example`](./.env.example).
+
 Leave `FASTAPI_URL` unset on Vercel. Set it only if you host the FastAPI service yourself (for example on Google Cloud Run with 2 GiB of memory). In that case also set `RETRAIN_TOKEN` there, which `POST /retrain` then requires in the `X-Retrain-Token` header, and `DISABLE_SCHEDULER=1` so retraining stays in GitHub Actions.
 
 Don't add `NEWS_API_KEY` to production: NewsAPI's free plan is for development only.

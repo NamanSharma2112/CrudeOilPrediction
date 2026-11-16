@@ -1,45 +1,35 @@
-import { LogOut, Moon, Settings, User } from 'lucide-react'
-import Link from 'next/link'
-import React from 'react'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ModeToggle } from './theme'
-import { SidebarTrigger } from './ui/sidebar'
+"use client"
 
-const Navbar = () => {
+import { usePathname } from "next/navigation"
+import { Github } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ModeToggle } from "./theme"
+import { SidebarTrigger } from "./ui/sidebar"
+import { navItemFor, REPO_URL } from "@/app/libs/nav"
+import { UserMenu, type SessionUser } from "./UserMenu"
+
+const Navbar = ({ user }: { user: SessionUser | null }) => {
+  const page = navItemFor(usePathname())
+
   return (
-    <nav className='p-4 flex items-center justify-between'>
-      <SidebarTrigger/>
-      <div className='flex items-center gap-4'>
-      <Link href="/">Dashboard</Link>
-      <ModeToggle />
-  
-<DropdownMenu>
-  <DropdownMenuTrigger>
-        <Avatar>
-  <AvatarImage src="https://github.com/shadcn.png" />
-  <AvatarFallback>CN</AvatarFallback>
-</Avatar>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent sideOffset={10} className='mr-4 transition-all duration-350 ease-in-out'>
-    <DropdownMenuGroup>
-      <DropdownMenuLabel>My Account</DropdownMenuLabel>
-      <DropdownMenuItem><User className='h-[1.2rem] w-[1.2rem] mr-2'/>Profile</DropdownMenuItem>
-      <DropdownMenuItem><Settings className='h-[1.2rem] w-[1.2rem] mr-2' />Settings</DropdownMenuItem>
-      <DropdownMenuItem variant="destructive"><LogOut className='h-[1.2rem] w-[1.2rem] mr-2'/>Logout</DropdownMenuItem>
-    </DropdownMenuGroup>
-   
-  </DropdownMenuContent>
-</DropdownMenu>
+    <nav className="flex items-center justify-between gap-3 p-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <SidebarTrigger />
+        {page && (
+          <span className="truncate text-sm text-muted-foreground">
+            CrudeIQ <span className="px-1">/</span>
+            <span className="text-foreground">{page.title}</span>
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <ModeToggle />
+        <Button variant="outline" size="icon" asChild>
+          <a href={REPO_URL} target="_blank" rel="noreferrer" aria-label="Source code on GitHub">
+            <Github className="size-[1.2rem]" />
+          </a>
+        </Button>
+        <UserMenu user={user} />
       </div>
     </nav>
   )

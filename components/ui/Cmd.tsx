@@ -1,32 +1,9 @@
 "use client"
 
 import * as React from "react"
-import {
-  BellIcon,
-  CalculatorIcon,
-  CalendarIcon,
-  ClipboardPasteIcon,
-  CodeIcon,
-  CommandIcon,
-  CopyIcon,
-  CreditCardIcon,
-  FileTextIcon,
-  FolderIcon,
-  FolderPlusIcon,
-  HelpCircleIcon,
-  HomeIcon,
-  ImageIcon,
-  InboxIcon,
-  LayoutGridIcon,
-  ListIcon,
-  PlusIcon,
-  ScissorsIcon,
-  SettingsIcon,
-  TrashIcon,
-  UserIcon,
-  ZoomInIcon,
-  ZoomOutIcon,
-} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
+import { CommandIcon, ExternalLink, Moon, PanelLeft, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -40,145 +17,84 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command"
+import { useSidebar } from "@/components/ui/sidebar"
+import { DASHBOARD_NAV, HELP_NAV, REPO_URL } from "@/app/libs/nav"
 
-export function CommandManyItems() {
+/** ⌘K / Ctrl+K command palette: jump to any page, switch theme, open the repo. */
+export function CommandMenu() {
   const [open, setOpen] = React.useState(false)
+  const router = useRouter()
+  const { setTheme } = useTheme()
+  const { toggleSidebar } = useSidebar()
+
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setOpen((o) => !o)
+      }
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [])
+
+  const run = (fn: () => void) => {
+    setOpen(false)
+    fn()
+  }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Button onClick={() => setOpen(true)} variant="outline" className="w-fit">
-        <CommandIcon className="mr-2 h-4 w-4" />
-        Open Command Menu
+    <>
+      <Button
+        onClick={() => setOpen(true)}
+        variant="outline"
+        className="w-full justify-start gap-2 text-muted-foreground group-data-[collapsible=icon]:hidden"
+      >
+        <CommandIcon className="size-4" />
+        <span className="flex-1 text-left">Search pages…</span>
+        <kbd className="rounded border px-1.5 font-mono text-[10px]">⌘K</kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-          <CommandInput placeholder="Type a command or search..." />
+          <CommandInput placeholder="Go to a page or run a command…" />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup heading="Navigation">
-              <CommandItem>
-                <HomeIcon />
-                <span>Home</span>
-                <CommandShortcut>⌘H</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <InboxIcon />
-                <span>Inbox</span>
-                <CommandShortcut>⌘I</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <FileTextIcon />
-                <span>Documents</span>
-                <CommandShortcut>⌘D</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <FolderIcon />
-                <span>Folders</span>
-                <CommandShortcut>⌘F</CommandShortcut>
-              </CommandItem>
+            <CommandGroup heading="Pages">
+              {[...DASHBOARD_NAV, ...HELP_NAV].map((item) => (
+                <CommandItem
+                  key={item.url}
+                  value={`${item.title} ${item.description}`}
+                  onSelect={() => run(() => router.push(item.url))}
+                >
+                  <item.icon />
+                  <span>{item.title}</span>
+                  <span className="ml-2 truncate text-xs text-muted-foreground">{item.description}</span>
+                </CommandItem>
+              ))}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Actions">
-              <CommandItem>
-                <PlusIcon />
-                <span>New File</span>
-                <CommandShortcut>⌘N</CommandShortcut>
+              <CommandItem onSelect={() => run(() => setTheme("light"))}>
+                <Sun />
+                <span>Light theme</span>
               </CommandItem>
-              <CommandItem>
-                <FolderPlusIcon />
-                <span>New Folder</span>
-                <CommandShortcut>⇧⌘N</CommandShortcut>
+              <CommandItem onSelect={() => run(() => setTheme("dark"))}>
+                <Moon />
+                <span>Dark theme</span>
               </CommandItem>
-              <CommandItem>
-                <CopyIcon />
-                <span>Copy</span>
-                <CommandShortcut>⌘C</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <ScissorsIcon />
-                <span>Cut</span>
-                <CommandShortcut>⌘X</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <ClipboardPasteIcon />
-                <span>Paste</span>
-                <CommandShortcut>⌘V</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <TrashIcon />
-                <span>Delete</span>
-                <CommandShortcut>⌫</CommandShortcut>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup heading="View">
-              <CommandItem>
-                <LayoutGridIcon />
-                <span>Grid View</span>
-              </CommandItem>
-              <CommandItem>
-                <ListIcon />
-                <span>List View</span>
-              </CommandItem>
-              <CommandItem>
-                <ZoomInIcon />
-                <span>Zoom In</span>
-                <CommandShortcut>⌘+</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <ZoomOutIcon />
-                <span>Zoom Out</span>
-                <CommandShortcut>⌘-</CommandShortcut>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup heading="Account">
-              <CommandItem>
-                <UserIcon />
-                <span>Profile</span>
-                <CommandShortcut>⌘P</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <CreditCardIcon />
-                <span>Billing</span>
+              <CommandItem onSelect={() => run(toggleSidebar)}>
+                <PanelLeft />
+                <span>Toggle sidebar</span>
                 <CommandShortcut>⌘B</CommandShortcut>
               </CommandItem>
-              <CommandItem>
-                <SettingsIcon />
-                <span>Settings</span>
-                <CommandShortcut>⌘S</CommandShortcut>
-              </CommandItem>
-              <CommandItem>
-                <BellIcon />
-                <span>Notifications</span>
-              </CommandItem>
-              <CommandItem>
-                <HelpCircleIcon />
-                <span>Help & Support</span>
-              </CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup heading="Tools">
-              <CommandItem>
-                <CalculatorIcon />
-                <span>Calculator</span>
-              </CommandItem>
-              <CommandItem>
-                <CalendarIcon />
-                <span>Calendar</span>
-              </CommandItem>
-              <CommandItem>
-                <ImageIcon />
-                <span>Image Editor</span>
-              </CommandItem>
-              <CommandItem>
-                <CodeIcon />
-                <span>Code Editor</span>
+              <CommandItem onSelect={() => run(() => window.open(REPO_URL, "_blank", "noreferrer"))}>
+                <ExternalLink />
+                <span>Open source code on GitHub</span>
               </CommandItem>
             </CommandGroup>
           </CommandList>
         </Command>
       </CommandDialog>
-    </div>
+    </>
   )
 }

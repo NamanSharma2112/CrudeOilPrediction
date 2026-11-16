@@ -16,7 +16,7 @@ concurrency:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -31,9 +31,21 @@ jobs:
       - name: Snapshot market data
         run: python backend/snapshot_market.py --out data-out
 
+      # Live tanker positions. Skipped quietly until the AISSTREAM_API_KEY
+      # secret exists (free key: https://aisstream.io, sign in with GitHub).
+      - name: Snapshot AIS tanker positions
+        id: ais
+        continue-on-error: true
+        env:
+          AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
+        run: python backend/snapshot_ais.py --out data-out --seconds 180
+
       - name: Publish to data branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           .github/scripts/data-branch.sh push data-out "Market snapshot $(date -u +%FT%TZ)" \
             market.json history-1M.json history-3M.json history-6M.json history-1Y.json history-5Y.json
+          if [ -f data-out/tankers.json ]; then
+            .github/scripts/data-branch.sh push data-out "AIS snapshot $(date -u +%FT%TZ)" tankers.json
+          fi

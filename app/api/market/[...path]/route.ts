@@ -1,6 +1,7 @@
 /**
  * GET /api/market/quotes
  * GET /api/market/history?range=1M|3M|6M|1Y|5Y
+ * GET /api/market/tankers   (live AIS tanker positions, when configured)
  *
  * Deployed: serves the hourly snapshot files written by
  * .github/workflows/market.yml. Locally: proxies to FastAPI's /market/* routes.
@@ -22,6 +23,8 @@ export async function GET(
     let file: string;
     if (route === 'quotes') {
       file = 'market.json';
+    } else if (route === 'tankers') {
+      file = 'tankers.json';
     } else if (route === 'history') {
       const range = url.searchParams.get('range') ?? '1Y';
       if (!RANGES.includes(range)) {

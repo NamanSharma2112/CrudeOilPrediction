@@ -5,12 +5,11 @@ import { useMemo, useState } from "react"
 import { Globe, MapLegend, RankingBars, WorldMap, type MapMarker } from "meridian-ui"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { GLOBAL_CHOKEPOINTS } from "@/app/libs/constants"
-import { PRODUCTION_MBD, PRODUCTION_SHORT_NAMES, TRADE_ROUTES } from "@/app/libs/oil-data"
+import { PRODUCTION_MBD, PRODUCTION_SHORT_NAMES } from "@/app/libs/oil-data"
 import { Panel, Segmented } from "./Panel"
 
 const RAMP = ["#FDE68A", "#FBBF24", "#F59E0B", "#D97706", "#B45309", "#78350F"]
 const CHOKE_COLOR = "#EF4444"
-const ARC_COLOR = "#38BDF8"
 
 const chokepointMarkers: MapMarker[] = GLOBAL_CHOKEPOINTS.map((c) => ({
   id: c.id,
@@ -27,15 +26,15 @@ const shortName = (n: string) => PRODUCTION_SHORT_NAMES[n] ?? n
 const fullName = Object.fromEntries(Object.keys(PRODUCTION_MBD).map((n) => [shortName(n), n]))
 const fmtMbd = (v: number) => `${v.toFixed(1)} mb/d`
 
-const LAYERS = ["Production", "Trade flows", "Chokepoints"] as const
+const LAYERS = ["Production", "Chokepoints"] as const
 type Layer = (typeof LAYERS)[number]
 
 // ---------------------------------------------------------------------------
 // World map: production choropleth + trade routes + chokepoints, linked ranking
 // ---------------------------------------------------------------------------
 
-export function ProductionMap({ delay }: { delay?: number }) {
-  const [layer, setLayer] = useState<Layer>("Production")
+export function ProductionMap({ delay, initialLayer = "Production" }: { delay?: number; initialLayer?: Layer }) {
+  const [layer, setLayer] = useState<Layer>(initialLayer)
   const [hovered, setHovered] = useState<string | null>(null)
   // On phones the in-map legend covers most of the map; render it below instead.
   const isMobile = useIsMobile()
@@ -49,10 +48,10 @@ export function ProductionMap({ delay }: { delay?: number }) {
 
   return (
     <Panel
-      title="Global oil production & flows"
-      subtitle="Total petroleum liquids by country (approx. 2023, EIA) · major crude routes · maritime chokepoints"
+      title="Global oil production"
+      subtitle="Total petroleum liquids by country (approx. 2023, EIA) and the maritime chokepoints oil passes through"
       actions={<Segmented options={LAYERS} value={layer} onChange={setLayer} />}
-      className="lg:col-span-2 2xl:col-span-3"
+      className="lg:col-span-full"
       delay={delay}
     >
       <div className="grid gap-4 xl:grid-cols-[1fr_280px]">
@@ -64,13 +63,11 @@ export function ProductionMap({ delay }: { delay?: number }) {
             valueLabel="Production"
             formatValue={fmtMbd}
             legend={layer === "Production" && !isMobile ? "Million barrels / day" : false}
-            arcs={layer !== "Chokepoints" ? TRADE_ROUTES.map((r) => ({ from: r.from, to: r.to, color: ARC_COLOR })) : []}
-            arcDuration={3.2}
             markers={layer !== "Production" ? chokepointMarkers : []}
             selected={hovered ? fullName[hovered] ?? hovered : null}
             onRegionHover={(r) => setHovered(r && PRODUCTION_MBD[r.name] ? shortName(r.name) : null)}
             zoomable
-            aria-label="World map of oil production, trade routes and chokepoints"
+            aria-label="World map of oil production and chokepoints"
           />
           {layer === "Production" && isMobile && (
             <MapLegend
@@ -98,16 +95,6 @@ export function ProductionMap({ delay }: { delay?: number }) {
                 Shown countries total ≈ {total.toFixed(0)} mb/d of ~102 mb/d world supply.
               </p>
             </>
-          )}
-          {layer === "Trade flows" && (
-            <ul className="flex flex-col gap-1.5 text-sm">
-              {TRADE_ROUTES.map((r) => (
-                <li key={r.label} className="flex items-center gap-2">
-                  <span className="size-1.5 shrink-0 rounded-full " style={{ background: ARC_COLOR }} />
-                  {r.label}
-                </li>
-              ))}
-            </ul>
           )}
           {layer === "Chokepoints" && <ChokepointList />}
         </div>
@@ -155,7 +142,6 @@ export function ChokepointGlobe({ delay }: { delay?: number }) {
         <Globe
           variant="dots"
           markers={chokepointMarkers}
-          arcs={TRADE_ROUTES.map((r) => ({ from: r.from, to: r.to, color: ARC_COLOR }))}
           terminator
           autoRotate={focus ? 0 : 6}
           initialView={{ lat: 20, lng: 55 }}
