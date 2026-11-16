@@ -1,19 +1,48 @@
 /**
- * Proxies GET /api/market/* to the FastAPI backend's /market/* endpoints
- * (live Yahoo Finance quotes and price history).
+ * GET /api/market/quotes
+ * GET /api/market/history?range=1M|3M|6M|1Y|5Y
+ *
+ * Deployed: serves the hourly snapshot files written by
+ * .github/workflows/market.yml. Locally: proxies to FastAPI's /market/* routes.
  */
 
-const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000';
+import { DataFileError, FASTAPI_URL, readDataFile, isStaticDataMode } from '@/app/libs/data-source';
+
+const RANGES = ['1M', '3M', '6M', '1Y', '5Y'];
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const { search } = new URL(request.url);
+  const url = new URL(request.url);
+
+  if (isStaticDataMode()) {
+    const route = path.join('/');
+    let file: string;
+    if (route === 'quotes') {
+      file = 'market.json';
+    } else if (route === 'history') {
+      const range = url.searchParams.get('range') ?? '1Y';
+      if (!RANGES.includes(range)) {
+        return Response.json({ message: `range must be one of ${RANGES.join(', ')}.` }, { status: 400 });
+      }
+      file = `history-${range}.json`;
+    } else {
+      return Response.json({ message: 'Not found' }, { status: 404 });
+    }
+
+    try {
+      // Snapshots change hourly; re-check every 5 minutes.
+      return Response.json(await readDataFile(file, 300));
+    } catch (error) {
+      const status = error instanceof DataFileError ? error.status : 502;
+      return Response.json({ message: (error as Error).message }, { status });
+    }
+  }
 
   try {
-    const response = await fetch(`${FASTAPI_URL}/market/${path.join('/')}${search}`, {
+    const response = await fetch(`${FASTAPI_URL}/market/${path.join('/')}${url.search}`, {
       cache: 'no-store',
     });
     const data = await response.json().catch(() => ({}));

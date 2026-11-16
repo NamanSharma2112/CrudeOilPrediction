@@ -1,0 +1,44 @@
+name: forecast
+
+# Daily ML forecasts (WTI/Brent x 7/30 days) from the latest trained models.
+on:
+  schedule:
+    - cron: "20 22 * * 1-5" # after NYMEX/ICE settlement, Mon–Fri (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forecast
+  cancel-in-progress: false
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      MODEL_DIR: ${{ github.workspace }}/data-out/models
+      TF_CPP_MIN_LOG_LEVEL: "2"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - run: pip install -r backend/requirements.txt
+
+      - name: Fetch trained models from data branch
+        run: .github/scripts/data-branch.sh pull data-out
+
+      - name: Run forecasts
+        run: python backend/predict_batch.py --out data-out
+
+      - name: Publish to data branch
+        run: .github/scripts/data-branch.sh push data-out "Forecasts $(date -u +%FT%TZ)" forecasts.json

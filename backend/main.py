@@ -15,7 +15,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -24,7 +24,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import MODEL_DIR, EXPERIMENTS
 from data_ingestion import fetch_all_data
-from model import forecast_latest, check_models_exist
+from model import check_models_exist
+from forecasting import build_forecast
 from market import router as market_router
 
 
@@ -108,8 +109,10 @@ def _start_scheduler():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: start background scheduler
-    _start_scheduler()
+    # Startup: start the weekly retrain scheduler unless disabled
+    # (set DISABLE_SCHEDULER=1 where retraining runs in GitHub Actions).
+    if os.getenv("DISABLE_SCHEDULER", "").lower() not in ("1", "true", "yes"):
+        _start_scheduler()
 
     # Check if retrain log exists
     log_path = os.path.join(MODEL_DIR, "retrain_log.json")
@@ -159,16 +162,9 @@ async def health_check():
 
 @app.post("/forecast", response_model=ForecastResponse)
 async def get_forecast(request: ForecastRequest):
-    # Map frontend horizon (7/30 days) to model horizon (1/7 days)
     symbol = request.symbol.lower()
     if symbol not in ("brent", "wti"):
         raise HTTPException(status_code=400, detail=f"Invalid symbol: {symbol}")
-
-    # Map frontend horizons to model horizons
-    horizon_map = {7: 7, 30: 7, 1: 1}
-    model_horizon = horizon_map.get(request.horizon, 7)
-
-    target_col = "WTI_close" if symbol == "wti" else "Brent_close"
 
     if not check_models_exist():
         raise HTTPException(
@@ -177,50 +173,8 @@ async def get_forecast(request: ForecastRequest):
         )
 
     try:
-        # Fetch latest data and run inference
         df = fetch_all_data(force_refresh=False)
-        result = forecast_latest(df, target_col=target_col, horizon=model_horizon)
-
-        # Build forecast array for the frontend chart
-        base_price = result["base_price"]
-        pred_stacked = result["pred_stacked"]
-
-        # Generate a simple forecast line from base → predicted
-        n_points = request.horizon
-        forecast_values = []
-        for i in range(n_points):
-            t = (i + 1) / n_points
-            forecast_values.append(round(base_price + t * (pred_stacked - base_price), 2))
-
-        # Compute confidence interval (±2% band, widening over time)
-        lower_ci = [round(v * (1 - 0.02 * (i + 1) / n_points), 2) for i, v in enumerate(forecast_values)]
-        upper_ci = [round(v * (1 + 0.02 * (i + 1) / n_points), 2) for i, v in enumerate(forecast_values)]
-
-        # Direction
-        delta = pred_stacked - base_price
-        if delta > 0.5:
-            direction = "bullish"
-        elif delta < -0.5:
-            direction = "bearish"
-        else:
-            direction = "neutral"
-
-        # Confidence (simple heuristic based on model agreement)
-        preds = [result["pred_lstm"], result["pred_xgb"], result["pred_lgbm"]]
-        spread = max(preds) - min(preds)
-        confidence = max(0.0, min(1.0, 1.0 - spread / base_price * 10))
-
-        return ForecastResponse(
-            symbol=symbol,
-            horizon=request.horizon,
-            forecast=forecast_values,
-            lower_ci=lower_ci,
-            upper_ci=upper_ci,
-            direction=direction,
-            confidence=round(confidence, 3),
-            model_version=result.get("model_version", "unknown"),
-            retrained_at=result.get("model_version", "unknown"),
-        )
+        return ForecastResponse(**build_forecast(df, symbol, request.horizon))
     except FileNotFoundError:
         raise HTTPException(
             status_code=503,
@@ -231,7 +185,13 @@ async def get_forecast(request: ForecastRequest):
 
 
 @app.post("/retrain")
-async def trigger_retrain():
+async def trigger_retrain(x_retrain_token: Optional[str] = Header(default=None)):
+    # When RETRAIN_TOKEN is set (any public deployment), require it in the
+    # X-Retrain-Token header so strangers can't start a CPU-heavy job.
+    expected = os.getenv("RETRAIN_TOKEN")
+    if expected and x_retrain_token != expected:
+        raise HTTPException(status_code=401, detail="Missing or invalid X-Retrain-Token header.")
+
     if _retrain_state["status"] == "running":
         return {"message": "Retraining already in progress.", "status": "running"}
 

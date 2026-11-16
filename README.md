@@ -353,31 +353,34 @@ Typography:
 
 ---
 
-## Deployment
+## Deployment (free)
 
-### Frontend (Vercel)
+Production runs on two free services and no always-on Python server:
 
-```bash
-vercel deploy
-```
+- **GitHub Actions** runs the Python jobs on a schedule and publishes their output to the repo's `data` branch:
+  - `retrain.yml`: Sunday 02:40 UTC. Retrains all models and publishes `models/` and `forecasts.json`.
+  - `forecast.yml`: weekdays 22:20 UTC. Writes `forecasts.json` from the latest models.
+  - `market.yml`: hourly on weekdays. Writes `market.json` and `history-*.json` (no TensorFlow, ~1 min).
+  - `ci.yml`: lint, typecheck, build and a backend compile check on every PR and push to `main`.
+- **Vercel (Hobby)** hosts the Next.js app. When `DATA_BASE_URL` is set, `/api/forecast` and `/api/market/*` serve the files from the `data` branch instead of calling FastAPI.
 
-Set all environment variables from `.env.local` in the Vercel project settings. The `ML_API_URL` should point to your Railway deployment.
+### One-time setup
 
-### ML API (Railway)
+1. Get free keys from [EIA](https://www.eia.gov/opendata/register.php) and [FRED](https://fredaccount.stlouisfed.org/apikeys). Both are optional, but they add features the model otherwise lacks.
+2. In GitHub, go to **Settings → Secrets and variables → Actions** and add `EIA_API_KEY` and `FRED_API_KEY`. Under **Settings → Actions → General → Workflow permissions**, choose *Read and write permissions*.
+3. Merge to `main`, then in the **Actions** tab run **retrain**, then **market**, with *Run workflow*. This creates the `data` branch.
+4. Import the repo in Vercel (framework: Next.js, default settings) and set these environment variables:
 
-```bash
-railway up
-```
+| Variable | Value |
+|---|---|
+| `DATA_BASE_URL` | `https://raw.githubusercontent.com/NamanSharma2112/CrudeOilPrediction/data` |
+| `DATA_READ_TOKEN` | Private repos only: a fine-grained token with read-only *Contents* access to this repo |
 
-The `Procfile` at `ml/Procfile` specifies `web: uvicorn main:app --host 0.0.0.0 --port $PORT`.
+5. Deploy, then check `https://<your-app>.vercel.app/api/market/quotes`.
 
-### Database (Supabase)
+Leave `FASTAPI_URL` unset on Vercel. Set it only if you host the FastAPI service yourself (for example on Google Cloud Run with 2 GiB of memory). In that case also set `RETRAIN_TOKEN` there, which `POST /retrain` then requires in the `X-Retrain-Token` header, and `DISABLE_SCHEDULER=1` so retraining stays in GitHub Actions.
 
-Create a Supabase project, copy the connection string into `DATABASE_URL`, then run:
-
-```bash
-npx prisma migrate deploy
-```
+Don't add `NEWS_API_KEY` to production: NewsAPI's free plan is for development only.
 
 ---
 
@@ -388,13 +391,12 @@ npm run dev          # Start Next.js dev server
 npm run build        # Production build
 npm run lint         # ESLint
 npm run typecheck    # tsc --noEmit
-npm run test         # Vitest unit tests
-npm run test:e2e     # Playwright end-to-end tests
 
-# ML
-python ml/model/train.py          # Train model
-python ml/model/evaluate.py       # Print accuracy metrics
-python ml/data/fetch_eia.py       # Refresh training data
+# ML (from backend/)
+python retrain.py                          # Fetch data and retrain all models
+python predict_batch.py --out ../data-out  # Write forecasts.json
+python snapshot_market.py --out ../data-out  # Write market.json + history-*.json
+uvicorn main:app --port 8000               # Serve the API locally
 ```
 
 ---

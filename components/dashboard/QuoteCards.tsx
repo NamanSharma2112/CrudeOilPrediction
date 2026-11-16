@@ -60,18 +60,24 @@ export default function QuoteCards() {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5 font-medium text-foreground">
           <span className="relative flex size-2">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+            {data?.source !== "snapshot" && (
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+            )}
             <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
           </span>
-          Live markets
+          {data?.source === "snapshot" ? "Market snapshot" : "Live markets"}
         </span>
         {lastPrint && (
           <span>Last print {lastPrint.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</span>
         )}
-        {dataUpdatedAt > 0 && (
-          <span>
-            Polled {new Date(dataUpdatedAt).toLocaleTimeString()} · {isFetching ? "refreshing…" : "every 60 s"}
-          </span>
+        {data?.source === "snapshot" ? (
+          <span>Snapshot {new Date(data.fetched_at).toLocaleTimeString([], { timeStyle: "short" })} · updated hourly</span>
+        ) : (
+          dataUpdatedAt > 0 && (
+            <span>
+              Polled {new Date(dataUpdatedAt).toLocaleTimeString()} · {isFetching ? "refreshing…" : "every 60 s"}
+            </span>
+          )
         )}
         <span className="sm:ml-auto">Source: Yahoo Finance (delayed)</span>
       </div>
